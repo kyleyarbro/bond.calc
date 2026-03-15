@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ClearPath Bondsman Profit Calculator</title>
+<style>
+:root{--navy:#0D2F5B;--gold:#C8A24A;--bg:#eef2f6;--white:#fff;--red:#b91c1c;--green:#166534}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#1f2937}
+header{background:var(--navy);color:#fff;padding:16px}
+header h1{margin:0;font-size:22px}
+header p{margin:6px 0 0;font-size:12px;opacity:.9}
+main{padding:12px;max-width:980px;margin:0 auto}
+.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin:0 0 10px;color:var(--navy);font-size:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:12px;font-weight:700;margin-bottom:4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #cdd5df;border-radius:10px;font-size:14px}
+textarea{min-height:72px}
+.kpiwrap{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi{background:#f8fafc;border-left:5px solid var(--gold);border-radius:12px;padding:12px}
+.kpi .label{font-size:12px;color:#555}
+.kpi .num{font-size:22px;font-weight:700;color:var(--navy)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{border:none;border-radius:10px;padding:10px 14px;font-weight:700}
+.primary{background:var(--navy);color:#fff}
+.secondary{background:#ddd;color:#111}
+.warn{background:var(--red);color:#fff}
+.good{background:#dcfce7;color:var(--green);display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.mod{background:#fef3c7;color:#92400e;display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.high{background:#fee2e2;color:var(--red);display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.small{font-size:12px;color:#555}
+.table{width:100%;border-collapse:collapse}
+.table td,.table th{padding:8px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:14px}
+.footer{font-size:11px;color:#666;text-align:center;padding:10px 0 20px}
+@media(max-width:700px){.grid,.kpiwrap{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>ClearPath Bondsman Profit Calculator</h1>
+  <p>Quick math for premiums, payment plans, net, and exposure.</p>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Bond Inputs</h2>
+    <div class="grid">
+      <div><label>Defendant</label><input id="defendant" placeholder="John Smith"></div>
+      <div><label>County</label><input id="county" placeholder="Wake"></div>
+      <div><label>Bond Amount</label><input id="bondAmount" type="number" step="0.01" value="15000"></div>
+      <div><label>Premium %</label><input id="premiumPct" type="number" step="0.01" value="10"></div>
+      <div><label>Down Payment Received</label><input id="downPayment" type="number" step="0.01" value="500"></div>
+      <div><label>Monthly Payment Amount</label><input id="monthlyPayment" type="number" step="0.01" value="200"></div>
+      <div><label># of Monthly Payments</label><input id="months" type="number" step="1" value="5"></div>
+      <div><label>Your Split % (if applicable)</label><input id="yourSplit" type="number" step="0.01" value="40"></div>
+      <div><label>Estimated Recovery Cost if Skip</label><input id="recoveryCost" type="number" step="0.01" value="1200"></div>
+      <div><label>Forfeiture Exposure Estimate</label><input id="forfeitureExposure" type="number" step="0.01" value="15000"></div>
+      <div><label>Prior FTA?</label>
+        <select id="fta"><option>No</option><option>Yes</option></select>
+      </div>
+      <div><label>Local Resident?</label>
+        <select id="localResident"><option>Yes</option><option>No</option></select>
+      </div>
+      <div><label>Stable Job?</label>
+        <select id="stableJob"><option>Yes</option><option>No</option></select>
+      </div>
+      <div><label>Verified Indemnitor?</label>
+        <select id="verifiedIndemnitor"><option>Yes</option><option>No</option></select>
+      </div>
+      <div><label>Out-of-State Ties?</label>
+        <select id="outState"><option>No</option><option>Yes</option></select>
+      </div>
+      <div><label>Serious Violent Charges?</label>
+        <select id="violent"><option>No</option><option>Yes</option></select>
+      </div>
+      <div style="grid-column:1/-1"><label>Notes</label><textarea id="notes" placeholder="Any extra risk notes, collateral, co-signer details, etc."></textarea></div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="calcBtn">Calculate</button>
+      <button class="secondary" id="resetBtn">Reset</button>
+      <button class="secondary" id="saveBtn">Save Scenario</button>
+      <button class="warn" id="exportBtn">Export Scenarios</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Results</h2>
+    <div class="kpiwrap">
+      <div class="kpi"><div class="label">Premium Due</div><div class="num" id="premiumDue">$0.00</div></div>
+      <div class="kpi"><div class="label">Total Planned Collected</div><div class="num" id="plannedCollected">$0.00</div></div>
+      <div class="kpi"><div class="label">Your Gross Share</div><div class="num" id="grossShare">$0.00</div></div>
+      <div class="kpi"><div class="label">Projected Net After Recovery Cost</div><div class="num" id="netAfterRecovery">$0.00</div></div>
+      <div class="kpi"><div class="label">Remaining Balance</div><div class="num" id="remainingBalance">$0.00</div></div>
+      <div class="kpi"><div class="label">Risk / Exposure</div><div class="num" id="exposureDisplay">$0.00</div></div>
+    </div>
+    <div style="margin-top:12px">
+      <strong>Bond Decision:</strong> <span id="riskBadge" class="mod">Moderate</span>
+      <div class="small" id="riskText" style="margin-top:8px;">Run the calculator to score the bond.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Breakdown</h2>
+    <table class="table">
+      <tr><th>Item</th><th>Amount / Status</th></tr>
+      <tr><td>Bond Amount</td><td id="rowBond">$0.00</td></tr>
+      <tr><td>Premium %</td><td id="rowPremiumPct">0%</td></tr>
+      <tr><td>Premium Due</td><td id="rowPremiumDue">$0.00</td></tr>
+      <tr><td>Down Payment</td><td id="rowDown">$0.00</td></tr>
+      <tr><td>Payment Plan Total</td><td id="rowPlan">$0.00</td></tr>
+      <tr><td>Total Planned Collection</td><td id="rowTotalCollection">$0.00</td></tr>
+      <tr><td>Your Split %</td><td id="rowSplit">0%</td></tr>
+      <tr><td>Your Gross Share</td><td id="rowGross">$0.00</td></tr>
+      <tr><td>Estimated Recovery Cost</td><td id="rowRecovery">$0.00</td></tr>
+      <tr><td>Projected Net</td><td id="rowNet">$0.00</td></tr>
+      <tr><td>Forfeiture Exposure</td><td id="rowExposure">$0.00</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Saved Scenarios</h2>
+    <div id="scenarioList" class="small">No saved scenarios yet.</div>
+  </div>
+</main>
+
+<div class="footer">This is a planning tool, not legal or accounting advice. Export backups so your phone doesn’t decide to become a hostile witness.</div>
+
+<script>
+(function(){
+  const KEY = 'cp_profit_scenarios';
+  const $ = id => document.getElementById(id);
+  const money = v => {
+    const n = Number(v || 0);
+    return isNaN(n) ? '$0.00' : n.toLocaleString(undefined,{style:'currency',currency:'USD'});
+  };
+  const num = v => {
+    const n = Number(v || 0);
+    return isNaN(n) ? 0 : n;
+  };
+  const getScenarios = () => JSON.parse(localStorage.getItem(KEY) || '[]');
+  const setScenarios = arr => localStorage.setItem(KEY, JSON.stringify(arr));
+
+  function calcRiskScore(){
+    let score = 0;
+    if ($('fta').value === 'Yes') score -= 3;
+    if ($('localResident').value === 'Yes') score += 2; else score -= 2;
+    if ($('stableJob').value === 'Yes') score += 2; else score -= 2;
+    if ($('verifiedIndemnitor').value === 'Yes') score += 3; else score -= 3;
+    if ($('outState').value === 'Yes') score -= 2;
+    if ($('violent').value === 'Yes') score -= 3;
+    return score;
+  }
+
+  function riskLabel(score){
+    if (score >= 3) return ['Low', 'good', 'Looks workable if the paperwork and collateral are tight.'];
+    if (score >= 0) return ['Moderate', 'mod', 'Proceed carefully. Tighten payment terms, collateral, and reminders.'];
+    return ['High', 'high', 'This one smells expensive. Better underwriting or decline it before it becomes your hobby.'];
+  }
+
+  function calculate(){
+    const bondAmount = num($('bondAmount').value);
+    const premiumPct = num($('premiumPct').value);
+    const down = num($('downPayment').value);
+    const monthly = num($('monthlyPayment').value);
+    const months = num($('months').value);
+    const split = num($('yourSplit').value);
+    const recovery = num($('recoveryCost').value);
+    const exposure = num($('forfeitureExposure').value);
+
+    const premiumDue = bondAmount * (premiumPct / 100);
+    const planTotal = monthly * months;
+    const plannedCollected = down + planTotal;
+    const remainingBalance = premiumDue - plannedCollected;
+    const grossShare = plannedCollected * (split / 100);
+    const netAfterRecovery = grossShare - recovery;
+
+    const score = calcRiskScore();
+    const [label, cls, text] = riskLabel(score);
+
+    $('premiumDue').textContent = money(premiumDue);
+    $('plannedCollected').textContent = money(plannedCollected);
+    $('grossShare').textContent = money(grossShare);
+    $('netAfterRecovery').textContent = money(netAfterRecovery);
+    $('remainingBalance').textContent = money(remainingBalance);
+    $('exposureDisplay').textContent = money(exposure);
+
+    $('rowBond').textContent = money(bondAmount);
+    $('rowPremiumPct').textContent = premiumPct.toFixed(2) + '%';
+    $('rowPremiumDue').textContent = money(premiumDue);
+    $('rowDown').textContent = money(down);
+    $('rowPlan').textContent = money(planTotal);
+    $('rowTotalCollection').textContent = money(plannedCollected);
+    $('rowSplit').textContent = split.toFixed(2) + '%';
+    $('rowGross').textContent = money(grossShare);
+    $('rowRecovery').textContent = money(recovery);
+    $('rowNet').textContent = money(netAfterRecovery);
+    $('rowExposure').textContent = money(exposure);
+
+    const badge = $('riskBadge');
+    badge.textContent = label;
+    badge.className = cls;
+    $('riskText').textContent = text;
+
+    return {
+      defendant: $('defendant').value,
+      county: $('county').value,
+      bondAmount, premiumPct, down, monthly, months, split, recovery, exposure,
+      premiumDue, planTotal, plannedCollected, remainingBalance, grossShare, netAfterRecovery,
+      riskScore: score, riskLabel: label, notes: $('notes').value
+    };
+  }
+
+  function resetForm(){
+    $('defendant').value = '';
+    $('county').value = '';
+    $('bondAmount').value = 15000;
+    $('premiumPct').value = 10;
+    $('downPayment').value = 500;
+    $('monthlyPayment').value = 200;
+    $('months').value = 5;
+    $('yourSplit').value = 40;
+    $('recoveryCost').value = 1200;
+    $('forfeitureExposure').value = 15000;
+    $('fta').value = 'No';
+    $('localResident').value = 'Yes';
+    $('stableJob').value = 'Yes';
+    $('verifiedIndemnitor').value = 'Yes';
+    $('outState').value = 'No';
+    $('violent').value = 'No';
+    $('notes').value = '';
+    calculate();
+  }
+
+  function renderScenarios(){
+    const arr = getScenarios();
+    $('scenarioList').innerHTML = arr.length ? arr.map((x,i)=>`
+      <div style="border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-top:8px;background:#fafafa">
+        <strong>${(x.defendant || 'Unnamed Defendant')}</strong> — ${x.county || 'No County'}<br>
+        <span style="font-size:12px;color:#555">Bond: ${money(x.bondAmount)} • Premium Due: ${money(x.premiumDue)} • Net: ${money(x.netAfterRecovery)}</span><br>
+        <span style="font-size:12px;color:#555">Risk: ${x.riskLabel} • Planned Collection: ${money(x.plannedCollected)}</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button class="secondary" onclick="window.loadScenario(${i})">Load</button>
+          <button class="warn" onclick="window.deleteScenario(${i})">Delete</button>
+        </div>
+      </div>
+    `).join('') : 'No saved scenarios yet.';
+  }
+
+  window.loadScenario = function(i){
+    const arr = getScenarios();
+    const x = arr[i];
+    if(!x) return;
+    $('defendant').value = x.defendant || '';
+    $('county').value = x.county || '';
+    $('bondAmount').value = x.bondAmount || 0;
+    $('premiumPct').value = x.premiumPct || 0;
+    $('downPayment').value = x.down || 0;
+    $('monthlyPayment').value = x.monthly || 0;
+    $('months').value = x.months || 0;
+    $('yourSplit').value = x.split || 0;
+    $('recoveryCost').value = x.recovery || 0;
+    $('forfeitureExposure').value = x.exposure || 0;
+    $('notes').value = x.notes || '';
+    calculate();
+  }
+
+  window.deleteScenario = function(i){
+    const arr = getScenarios();
+    arr.splice(i,1);
+    setScenarios(arr);
+    renderScenarios();
+  }
+
+  function saveScenario(){
+    const result = calculate();
+    const arr = getScenarios();
+    arr.unshift(result);
+    setScenarios(arr);
+    renderScenarios();
+  }
+
+  function exportScenarios(){
+    const arr = getScenarios();
+    const blob = new Blob([JSON.stringify(arr,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'clearpath-bond-profit-scenarios.json';
+    a.click();
+  }
+
+  $('calcBtn').addEventListener('click', calculate);
+  $('resetBtn').addEventListener('click', resetForm);
+  $('saveBtn').addEventListener('click', saveScenario);
+  $('exportBtn').addEventListener('click', exportScenarios);
+
+  resetForm();
+  renderScenarios();
+})();
+</script>
+</body>
+</html>
